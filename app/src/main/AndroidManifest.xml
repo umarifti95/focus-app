@@ -3,6 +3,8 @@
     <application
         android:theme="@style/AppTheme"
         android:label="FOCUS"
+        android:icon="@drawable/focus_icon"
+        android:roundIcon="@drawable/focus_icon"
         android:allowBackup="true"
         android:supportsRtl="true">
 
