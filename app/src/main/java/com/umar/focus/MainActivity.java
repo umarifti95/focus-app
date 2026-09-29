@@ -6,7 +6,9 @@ import android.graphics.Color;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
 
 public class MainActivity extends Activity {
 
@@ -18,17 +20,30 @@ public class MainActivity extends Activity {
 
         Window window = getWindow();
 
-        // Keep FOCUS below the status bar / camera cutout
         window.setStatusBarColor(Color.rgb(5, 6, 8));
-
-        // Keep FOCUS above Android's bottom navigation area
         window.setNavigationBarColor(Color.rgb(5, 6, 8));
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(5, 6, 8));
 
-        // Do not draw the WebView underneath Android system bars
-        webView.setFitsSystemWindows(true);
+        webView.setOnApplyWindowInsetsListener((view, insets) -> {
+
+            android.graphics.Insets systemBars =
+                    insets.getInsets(
+                            WindowInsets.Type.statusBars()
+                                    | WindowInsets.Type.navigationBars()
+                                    | WindowInsets.Type.displayCutout()
+                    );
+
+            view.setPadding(
+                    systemBars.left,
+                    systemBars.top,
+                    systemBars.right,
+                    systemBars.bottom
+            );
+
+            return insets;
+        });
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -40,6 +55,8 @@ public class MainActivity extends Activity {
 
         setContentView(webView);
 
+        webView.requestApplyInsets();
+
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/index.html");
         } else {
@@ -48,17 +65,4 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        webView.saveState(outState);
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-}
+   
