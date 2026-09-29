@@ -9,7 +9,7 @@ import android.webkit.WebViewClient;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
-
+import android.view.WindowManager;
 public class MainActivity extends Activity {
 
     private WebView webView;
@@ -19,7 +19,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Window window = getWindow();
-
+window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         window.setStatusBarColor(Color.rgb(5, 6, 8));
         window.setNavigationBarColor(Color.rgb(5, 6, 8));
 
