@@ -1,1 +1,17 @@
+workflows:
+  focus-android:
+    name: Build FOCUS APK
+    max_build_duration: 30
 
+    environment:
+      java: 17
+
+    scripts:
+      - name: Build FOCUS APK
+        script: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip
+          ./gradle-8.7/bin/gradle assembleDebug
+
+    artifacts:
+      - app/build/outputs/apk/debug/app-debug.apk
