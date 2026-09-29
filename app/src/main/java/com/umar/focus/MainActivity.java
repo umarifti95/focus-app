@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.Window;
 
 public class MainActivity extends Activity {
 
@@ -15,11 +16,19 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setStatusBarColor(Color.rgb(5, 6, 8));
-        getWindow().setNavigationBarColor(Color.rgb(5, 6, 8));
+        Window window = getWindow();
+
+        // Keep FOCUS below the status bar / camera cutout
+        window.setStatusBarColor(Color.rgb(5, 6, 8));
+
+        // Keep FOCUS above Android's bottom navigation area
+        window.setNavigationBarColor(Color.rgb(5, 6, 8));
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(5, 6, 8));
+
+        // Do not draw the WebView underneath Android system bars
+        webView.setFitsSystemWindows(true);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
