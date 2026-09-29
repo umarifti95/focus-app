@@ -3,13 +3,16 @@ package com.umar.focus;
 import android.app.Activity;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+
 public class MainActivity extends Activity {
 
     private WebView webView;
@@ -19,28 +22,43 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Window window = getWindow();
-window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        window.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        );
         window.setStatusBarColor(Color.rgb(5, 6, 8));
         window.setNavigationBarColor(Color.rgb(5, 6, 8));
+
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.rgb(5, 6, 8));
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(5, 6, 8));
 
-        webView.setOnApplyWindowInsetsListener((view, insets) -> {
+        FrameLayout.LayoutParams webParams =
+                new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                );
 
-            android.graphics.Insets systemBars =
-                    insets.getInsets(
-                            WindowInsets.Type.statusBars()
-                                    | WindowInsets.Type.navigationBars()
-                                    | WindowInsets.Type.displayCutout()
-                    );
+        root.addView(webView, webParams);
 
-            view.setPadding(
-                    systemBars.left,
-                    systemBars.top,
-                    systemBars.right,
-                    systemBars.bottom
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+
+            Insets systemBars = insets.getInsets(
+                    WindowInsets.Type.statusBars()
+                            | WindowInsets.Type.navigationBars()
+                            | WindowInsets.Type.displayCutout()
             );
+
+            FrameLayout.LayoutParams params =
+                    (FrameLayout.LayoutParams) webView.getLayoutParams();
+
+            params.leftMargin = systemBars.left;
+            params.topMargin = systemBars.top;
+            params.rightMargin = systemBars.right;
+            params.bottomMargin = systemBars.bottom;
+
+            webView.setLayoutParams(params);
 
             return insets;
         });
@@ -53,9 +71,9 @@ window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         webView.setWebViewClient(new WebViewClient());
 
-        setContentView(webView);
+        setContentView(root);
 
-        webView.requestApplyInsets();
+        root.requestApplyInsets();
 
         if (savedInstanceState == null) {
             webView.loadUrl("file:///android_asset/index.html");
@@ -65,9 +83,8 @@ window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     }
 
     @Override
-protected void onSaveInstanceState(Bundle outState) {
-    webView.saveState(outState);
-    super.onSaveInstanceState(outState);
+    protected void onSaveInstanceState(Bundle outState) {
+        webView.saveState(outState);
+        super.onSaveInstanceState(outState);
+    }
 }
-}
-   
