@@ -4830,5 +4830,89 @@ syncHomeProjection13();
   line-height:15px!important;
 }
 </style>
+
+<style>
+/* CAR FINAL — sheet/nav containment */
+#overlay{z-index:2147483200!important}
+#overlay .sheet{
+  max-height:calc(100dvh - 72px)!important;
+  padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important;
+  overscroll-behavior:contain;
+  scroll-padding-bottom:40px;
+}
+body:has(#overlay[style*="display: flex"]) .nav{pointer-events:none}
+</style>
+<script>
+/* CAR FINAL — unified persistence, refresh and history integrity */
+(function(){
+ const by=id=>document.getElementById(id);
+ function cars(){settings.cars=Array.isArray(settings.cars)?settings.cars:[];return settings.cars}
+ function persist(){localStorage.setItem('focus-settings',JSON.stringify(settings));try{v1219RenderHomeLife()}catch(e){}try{if(typeof renderInsights==='function')renderInsights()}catch(e){}}
+ function normalize(c){
+   c=c||{};c.id=c.id||('car-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+   c.name=c.name||'My Car';c.make=c.make||'';c.model=c.model||'';c.year=c.year||'';
+   c.odometer=Number(c.odometer||0);c.logs=Array.isArray(c.logs)?c.logs:[];c.maintenance=Array.isArray(c.maintenance)?c.maintenance:[];
+   return c;
+ }
+ cars().forEach(normalize);persist();
+
+ window.v1217SaveCar=function(i){
+   const name=by('v1217CarName'),make=by('v1217CarMake'),model=by('v1217CarModel'),year=by('v1217CarYear'),odo=by('v1217Odo');
+   if(!name||!make||!model||!year||!odo){alert('Could not save car. Please reopen the form and try again.');return}
+   const old=i===null?{}:(cars()[i]||{}), c=normalize({...old});
+   c.name=name.value.trim()||'My Car';c.make=make.value.trim();c.model=model.value.trim();c.year=Number(year.value||0)||'';c.odometer=Number(odo.value||0)||0;
+   if(i===null)cars().push(c);else cars()[i]=c;
+   persist();v1217OpenCars();
+ };
+ window.v1217DeleteCar=function(i){
+   if(i<0||i>=cars().length)return;
+   cars().splice(i,1);persist();v1217OpenCars();
+ };
+ window.v1219SaveFuel=function(i){
+   const c=cars()[i],date=by('v1217CarLogDate'),odo=by('v1217CarLogOdo'),amt=by('v1217CarLogAmount'),lit=by('v1219Litres'),note=by('v1217CarLogNote');
+   if(!c||!date||!odo||!amt||!lit||!note){alert('Could not save fuel log. Please reopen the form and try again.');return}
+   const km=Number(odo.value||0),amount=Number(amt.value||0),litres=Number(lit.value||0);
+   c.odometer=Math.max(Number(c.odometer||0),km);c.logs=Array.isArray(c.logs)?c.logs:[];
+   c.logs.push({id:'fuel-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),type:'Fuel',date:date.value,odometer:km,amount,litres,note:note.value.trim()});
+   persist();v1219CarDetail(i,'fuel');
+ };
+ window.v1219SaveMaintenance=function(ci,mi){
+   const c=cars()[ci];if(!c)return;
+   const name=by('v1219MaintName'),date=by('v1219MaintDate'),kmEl=by('v1219MaintKm'),costEl=by('v1219MaintCost'),nextKmEl=by('v1219NextKm'),nextDateEl=by('v1219NextDate'),noteEl=by('v1219MaintNote');
+   if(!name||!date||!kmEl||!costEl||!nextKmEl||!nextDateEl||!noteEl){alert('Could not save maintenance. Please reopen the form and try again.');return}
+   c.maintenance=Array.isArray(c.maintenance)?c.maintenance:[];c.logs=Array.isArray(c.logs)?c.logs:[];
+   const old=mi===null?null:c.maintenance[mi];
+   const mid=old?.id||('maint-'+Date.now()+'-'+Math.random().toString(36).slice(2,6));
+   const m={id:mid,name:name.value,lastDate:date.value,lastKm:Number(kmEl.value||0),cost:Number(costEl.value||0),nextKm:Number(nextKmEl.value||0)||null,nextDate:nextDateEl.value||'',note:noteEl.value.trim(),photos:[...(window.v1217PendingPhotos||[])],completed:old?.completed||false};
+   if(mi===null)c.maintenance.push(m);else c.maintenance[mi]=m;
+   c.odometer=Math.max(Number(c.odometer||0),m.lastKm||0);
+   const log={id:'service-'+mid,maintenanceId:mid,type:'Service',date:m.lastDate,odometer:m.lastKm,amount:m.cost,note:m.name};
+   const li=c.logs.findIndex(x=>x.maintenanceId===mid||x.id==='service-'+mid);
+   if(li>=0)c.logs[li]=log;else c.logs.push(log);
+   persist();v1219CarDetail(ci,'maintenance');
+ };
+
+ /* Keep the currently visible Home card synchronized after every settings save. */
+ const oldSaveSettings=window.saveSettings;
+ if(typeof oldSaveSettings==='function')window.saveSettings=function(){const r=oldSaveSettings.apply(this,arguments);try{v1219RenderHomeLife()}catch(e){}return r};
+
+ /* Public diagnostic used for regression testing without touching real user data. */
+ window.focusCarAudit=function(){
+   function cycle(label){
+     let state={cars:[]};
+     const add=(name,make,model,year,odo)=>state.cars.push(normalize({name,make,model,year,odometer:odo,logs:[],maintenance:[]}));
+     add(label,'Hyundai','Elantra',2024,12000);let c=state.cars[0];
+     c.logs.push({id:'f1',type:'Fuel',date:'2026-11-09',odometer:12100,amount:12000,litres:30,note:'Full tank'});c.odometer=Math.max(c.odometer,12100);
+     let m={id:'m1',name:'Engine Oil',lastDate:'2026-11-09',lastKm:12100,cost:8500,nextKm:17100,nextDate:'2027-02-09',note:'Test',photos:[],completed:false};c.maintenance.push(m);
+     c.logs.push({id:'service-m1',maintenanceId:'m1',type:'Service',date:m.lastDate,odometer:m.lastKm,amount:m.cost,note:m.name});
+     m={...m,cost:9000,note:'Edited'};c.maintenance[0]=m;let li=c.logs.findIndex(x=>x.maintenanceId==='m1');c.logs[li]={id:'service-m1',maintenanceId:'m1',type:'Service',date:m.lastDate,odometer:m.lastKm,amount:m.cost,note:m.name};
+     c.name=label+' Edited';
+     return {carCount:state.cars.length,homeVisible:!!state.cars[0],name:c.name,fuel:c.logs.filter(x=>x.type==='Fuel').length,maintenance:c.maintenance.length,serviceHistory:c.logs.filter(x=>x.type==='Service').length,odometer:c.odometer,pass:state.cars.length===1&&c.logs.filter(x=>x.type==='Fuel').length===1&&c.maintenance.length===1&&c.logs.filter(x=>x.type==='Service').length===1&&c.odometer===12100};
+   }
+   const first=cycle('Cycle One'),second=cycle('Cycle Two');return {first,second,pass:first.pass&&second.pass};
+ };
+ try{v1219RenderHomeLife()}catch(e){}
+})();
+</script>
 </body>
 </html>
